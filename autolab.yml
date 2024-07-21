@@ -1,0 +1,330 @@
+openapi: 3.0.3
+info:
+  title: Autolab API
+  version: 1.0.0
+  description: |
+    This page details all the endpoints of the Autolab REST API.
+    The client's access token should be included as a parameter to all endpoints. For details on obtaining access tokens, please see the API Overview.
+servers:
+  - url: https://<host>/api/v1
+paths:
+  /user:
+    get:
+      summary: Get basic user info
+      description: Retrieve basic information about the user.
+      tags:
+        - user
+      parameters:
+        - in: query
+          name: access_token
+          schema:
+            type: string
+          required: true
+          description: The access token of the client.
+      responses:
+        '200':
+          description: Successfully retrieved user info.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  first_name:
+                    type: string
+                    description: The user's first name.
+                  last_name:
+                    type: string
+                    description: The user's last name.
+                  email:
+                    type: string
+                    description: The user's registered email.
+                  school:
+                    type: string
+                    description: The school the user belongs to.
+                  major:
+                    type: string
+                    description: The user's major of study.
+                  year:
+                    type: string
+                    description: The user's year.
+        default:
+          description: An error occurred.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /courses:
+    get:
+      summary: Get all courses
+      description: Retrieve all courses currently taking or taken before.
+      tags:
+        - courses
+      parameters:
+        - in: query
+          name: state
+          schema:
+            type: string
+            enum: [disabled, completed, current, upcoming]
+          required: false
+          description: Filter the courses by the state of the course.
+        - in: query
+          name: access_token
+          schema:
+            type: string
+          required: true
+          description: The access token of the client.
+      responses:
+        '200':
+          description: Successfully retrieved courses.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      description: The unique url-safe name.
+                    display_name:
+                      type: string
+                      description: The full name of the course.
+                    semester:
+                      type: string
+                      description: The semester this course is being offered.
+                    late_slack:
+                      type: integer
+                      description: The number of seconds after a deadline that the server will still accept a submission and not count it as late.
+                    grace_days:
+                      type: integer
+                      description: The total number of days (over the entire semester) a student is allowed to submit an assessment late.
+                    auth_level:
+                      type: string
+                      description: The user's level of access for this course.
+        default:
+          description: An error occurred.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /courses/{course_name}/assessments:
+    get:
+      summary: Get all assessments of a course
+      description: Retrieve all the assessments of a course.
+      tags:
+        - assessments
+      parameters:
+        - in: path
+          name: course_name
+          schema:
+            type: string
+          required: true
+          description: The unique url-safe name of the course.
+        - in: query
+          name: access_token
+          schema:
+            type: string
+          required: true
+          description: The access token of the client.
+      responses:
+        '200':
+          description: Successfully retrieved assessments.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      description: The unique url-safe name.
+                    display_name:
+                      type: string
+                      description: The full name of the assessment.
+                    start_at:
+                      type: string
+                      format: date-time
+                      description: The time this assessment is released to students.
+                    due_at:
+                      type: string
+                      format: date-time
+                      description: Students can submit before this time without being penalized or using grace days.
+                    end_at:
+                      type: string
+                      format: date-time
+                      description: Last possible time that students can submit (except those granted extensions).
+                    category_name:
+                      type: string
+                      description: Name of the category this assessment belongs to.
+        default:
+          description: An error occurred.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /courses/{course_name}/assessments/{assessment_name}:
+    get:
+      summary: Show detailed information of an assessment
+      description: Retrieve detailed information of an assessment.
+      tags:
+        - assessments
+      parameters:
+        - in: path
+          name: course_name
+          schema:
+            type: string
+          required: true
+          description: The unique url-safe name of the course.
+        - in: path
+          name: assessment_name
+          schema:
+            type: string
+          required: true
+          description: The unique url-safe name of the assessment.
+        - in: query
+          name: access_token
+          schema:
+            type: string
+          required: true
+          description: The access token of the client.
+      responses:
+        '200':
+          description: Successfully retrieved assessment details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: The unique url-safe name.
+                  display_name:
+                    type: string
+                    description: The full name of the assessment.
+                  description:
+                    type: string
+                    description: A short description of the assessment.
+                  start_at:
+                    type: string
+                    format: date-time
+                    description: The time this assessment is released to students.
+                  due_at:
+                    type: string
+                    format: date-time
+                    description: Students can submit before this time without being penalized or using grace days.
+                  end_at:
+                    type: string
+                    format: date-time
+                    description: Last possible time that students can submit (except those granted extensions).
+                  updated_at:
+                    type: string
+                    format: date-time
+                    description: The last time an update was made to the assessment.
+                  max_grace_days:
+                    type: integer
+                    description: Maximum number of grace days that a student can spend on this assessment.
+                  max_submissions:
+                    type: integer
+                    description: The maximum number of times a student can submit the assessment. -1 means unlimited submissions.
+                  max_unpenalized_submissions:
+                    type: integer
+                    description: The maximum number of times the assessment can be submitted without incurring a penalty. -1 means unlimited submissions.
+                  disable_handins:
+                    type: boolean
+                    description: Are handins disallowed by students?
+                  category_name:
+                    type: string
+                    description: Name of the category this assessment belongs to.
+                  group_size:
+                    type: integer
+                    description: The maximum size of groups for this assessment.
+                  writeup_format:
+                    type: string
+                    description: The format of this assessment's writeup. One of 'none', 'url', or 'file'.
+                  handout_format:
+                    type: string
+                    description: The format of this assessment's handout. One of 'none', 'url', or 'file'.
+                  has_scoreboard:
+                    type: boolean
+                    description: Does this assessment have a scoreboard?
+                  has_autograder:
+                    type: boolean
+                    description: Does this assessment use an autograder?
+                  max_total_score:
+                    type: number
+                    format: float
+                    description: The maximum total score for this assessment.
+                  max_scores:
+                    type: object
+                    additionalProperties:
+                      type: number
+                      format: float
+                    description: An object with the problem name as the key, and the maximum score for the problem as the value.
+        default:
+          description: An error occurred.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    post:
+      summary: Set the group size of the assessment
+      description: Set the group size of the assessment.
+      tags:
+        - assessments
+      parameters:
+        - in: path
+          name: course_name
+          schema:
+            type: string
+          required: true
+          description: The unique url-safe name of the course.
+        - in: path
+          name: assessment_name
+          schema:
+            type: string
+          required: true
+          description: The unique url-safe name of the assessment.
+        - in: query
+          name: access_token
+          schema:
+            type: string
+          required: true
+          description: The access token of the client.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                group_size:
+                  type: integer
+                  description: The number of people in a group.
+                allow_student_assign_group:
+                  type: boolean
+                  description: Whether students are allowed to edit and self-assign groups.
+      responses:
+        '200':
+          description: Successfully set group settings.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  group_size:
+                    type: integer
+                    description: The number of people
+
